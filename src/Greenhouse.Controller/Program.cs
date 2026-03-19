@@ -104,6 +104,16 @@ try
         qos: MqttQualityOfServiceLevel.AtLeastOnce
     );
 
+    // Suscripción: CO2
+    await mqttHelper.SubscribeAsync(
+        topic: "greenhouse/sensor/co2",
+        qos: MqttQualityOfServiceLevel.AtMostOnce
+    );
+    // Suscripción: Luz
+    await mqttHelper.SubscribeAsync(
+        topic: "greenhouse/sensor/light",
+        qos: MqttQualityOfServiceLevel.AtLeastOnce
+    );
     Console.WriteLine("\n==============================================");
     Console.WriteLine("  PROCESANDO LECTURAS DE SENSORES");
     Console.WriteLine("  Presiona Ctrl+C para detener");
