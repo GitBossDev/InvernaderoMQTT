@@ -1,6 +1,7 @@
 ﻿using Greenhouse.Shared.Configuration;
 using Greenhouse.Shared.Helpers;
 using MQTTnet.Protocol;
+using System.Text.Json;
 
 /*
  * GREENHOUSE SENSORS - PUBLISHER (FASE 1)
@@ -38,7 +39,7 @@ try
 {
     Console.WriteLine("Conectando al broker MQTT...");
     await mqttHelper.ConnectAsync();
-    
+
     if (!mqttHelper.IsConnected)
     {
         Console.WriteLine("\n[ERROR] No se pudo conectar al broker.");
@@ -51,68 +52,70 @@ try
     Console.WriteLine("  FASE 1: PRUEBAS DE QoS");
     Console.WriteLine("==============================================\n");
 
-    // PRUEBA 1: QoS 0 - At Most Once (Máximo una vez)
+    // CO2
     // El mensaje se envía sin confirmación, puede perderse
     // Es el más rápido pero menos confiable
     // Útil para: datos no críticos, actualizaciones frecuentes (temperatura cada segundo)
-    Console.WriteLine("\n--- Prueba 1: QoS 0 (At Most Once) ---");
+    Console.WriteLine("\n--- CO2 ---");
     Console.WriteLine("Sin confirmación del broker, el mensaje puede perderse");
-    Console.WriteLine("Ideal para: datos no críticos que se actualizan frecuentemente\n");
-    
+
+    Random randomNumber = new Random();
+
+    // Generar un número aleatorio decimal entre 300 y 1500 (lo ideal 400-800)
+    int C02ppm = randomNumber.Next(300, 1500);
+
+    //Generamos variable con los datos del sensor
+    var dataC02 = new
+
+    {
+        sensorID = "CO2-1",
+        sensorType = "CO2",
+        value = C02ppm,
+        unit = "ppm",
+        timestamp = DateTime.UtcNow.ToString("o")
+
+    };
+
+    // Convertimos el objeto a JSON
+    string payloadJsonCO2 = JsonSerializer.Serialize(dataC02);
+
     await mqttHelper.PublishAsync(
-        topic: "greenhouse/test/qos0",
-        payload: $"Mensaje QoS 0 - Timestamp: {DateTime.Now:HH:mm:ss.fff}",
+        topic: "greenhouse/sensor/co2",
+        payload: payloadJsonCO2,
         qos: MqttQualityOfServiceLevel.AtMostOnce
     );
-    
-    await Task.Delay(1000);  // Esperar 1 segundo entre pruebas
 
-    // PRUEBA 2: QoS 1 - At Least Once (Al menos una vez)
+    await Task.Delay(5000);  // Esperar 1 segundo entre pruebas
+
+    // LUZ
     // El broker confirma que recibió el mensaje
     // Puede haber duplicados si la confirmación se pierde
     // Útil para: datos importantes que no deben perderse
-    Console.WriteLine("\n--- Prueba 2: QoS 1 (At Least Once) ---");
+    Console.WriteLine("\n--- LIGHT ---");
     Console.WriteLine("El broker confirma recepción, puede haber duplicados");
-    Console.WriteLine("Ideal para: datos importantes que requieren confirmación\n");
-    
+
+    int LightPercentage = randomNumber.Next(0, 100);
+
+    //Generamos variable con los datos del sensor
+    var dataLight = new
+    {
+        sensorID = "Light-1",
+        sensorType = "Light",
+        value = LightPercentage,
+        unit = "%",
+        timestamp = DateTime.Now
+    };
+
+    // Convertimos el objeto a JSON
+    string payloadJsonLuz = JsonSerializer.Serialize(dataLight);
+
     await mqttHelper.PublishAsync(
-        topic: "greenhouse/test/qos1",
-        payload: $"Mensaje QoS 1 - Timestamp: {DateTime.Now:HH:mm:ss.fff}",
+        topic: "greenhouse/sensor/light",
+        payload: payloadJsonLuz,
         qos: MqttQualityOfServiceLevel.AtLeastOnce
     );
-    
-    await Task.Delay(1000);
 
-    // PRUEBA 3: QoS 2 - Exactly Once (Exactamente una vez)
-    // Handshake de 4 pasos garantiza que el mensaje llegue una sola vez
-    // Es el más lento pero más confiable
-    // Útil para: comandos críticos (abrir válvula, activar alarma)
-    Console.WriteLine("\n--- Prueba 3: QoS 2 (Exactly Once) ---");
-    Console.WriteLine("Handshake completo, garantiza entrega única");
-    Console.WriteLine("Ideal para: comandos críticos que no deben duplicarse\n");
-    
-    await mqttHelper.PublishAsync(
-        topic: "greenhouse/test/qos2",
-        payload: $"Mensaje QoS 2 - Timestamp: {DateTime.Now:HH:mm:ss.fff}",
-        qos: MqttQualityOfServiceLevel.ExactlyOnce
-    );
-    
-    await Task.Delay(1000);
-
-    // PRUEBA 4: Retained Message (Mensaje retenido)
-    // El broker guarda el último mensaje con retain=true
-    // Nuevos suscriptores reciben inmediatamente este mensaje al conectarse
-    // Útil para: estado actual de dispositivos, configuraciones
-    Console.WriteLine("\n--- Prueba 4: Retained Message ---");
-    Console.WriteLine("El broker guarda este mensaje");
-    Console.WriteLine("Nuevos suscriptores lo recibirán inmediatamente\n");
-    
-    await mqttHelper.PublishAsync(
-        topic: "greenhouse/test/status",
-        payload: "Publisher activo y funcionando",
-        qos: MqttQualityOfServiceLevel.AtLeastOnce,
-        retain: true  // Este mensaje se retiene en el broker
-    );
+    await Task.Delay(5000);
 
     Console.WriteLine("\n==============================================");
     Console.WriteLine("  PUBLICACIÓN CONTINUA");
@@ -122,21 +125,21 @@ try
     // Publicar mensajes continuamente cada 3 segundos
     // Esto simula un sensor enviando datos periódicamente
     int messageCount = 0;
-    
+
     while (true)
     {
         messageCount++;
-        
+
         var message = $"Mensaje #{messageCount} desde Publisher - {DateTime.Now:HH:mm:ss}";
-        
+
         await mqttHelper.PublishAsync(
             topic: "greenhouse/test/heartbeat",
             payload: message,
             qos: MqttQualityOfServiceLevel.AtLeastOnce
         );
-        
+
         Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Publicado: {message}");
-        
+
         // Esperar 3 segundos antes del siguiente mensaje
         await Task.Delay(3000);
     }

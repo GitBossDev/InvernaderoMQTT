@@ -75,33 +75,14 @@ try
     Console.WriteLine("  SUSCRIPCIONES ACTIVAS");
     Console.WriteLine("==============================================\n");
 
-    // Suscripción 1: QoS 0
+    // Suscripción: CO2
     await mqttHelper.SubscribeAsync(
-        topic: "greenhouse/test/qos0",
+        topic: "greenhouse/sensor/co2",
         qos: MqttQualityOfServiceLevel.AtMostOnce
     );
-    //hola
-    // Suscripción 2: QoS 1
+    // Suscripción: Luz
     await mqttHelper.SubscribeAsync(
-        topic: "greenhouse/test/qos1",
-        qos: MqttQualityOfServiceLevel.AtLeastOnce
-    );
-
-    // Suscripción 3: QoS 2
-    await mqttHelper.SubscribeAsync(
-        topic: "greenhouse/test/qos2",
-        qos: MqttQualityOfServiceLevel.ExactlyOnce
-    );
-
-    // Suscripción 4: Status (con retained message)
-    await mqttHelper.SubscribeAsync(
-        topic: "greenhouse/test/status",
-        qos: MqttQualityOfServiceLevel.AtLeastOnce
-    );
-
-    // Suscripción 5: Heartbeat (mensajes continuos)
-    await mqttHelper.SubscribeAsync(
-        topic: "greenhouse/test/heartbeat",
+        topic: "greenhouse/sensor/light",
         qos: MqttQualityOfServiceLevel.AtLeastOnce
     );
 
@@ -109,10 +90,10 @@ try
     // El símbolo # significa "este nivel y todos los subniveles"
     // Esto es muy útil para debugging o monitoreo general
     Console.WriteLine("\n--- Suscripción con Wildcard ---");
-    Console.WriteLine("Wildcard '#' captura todos los topics bajo 'greenhouse/test/'\n");
+    Console.WriteLine("Wildcard '#' captura todos los topics bajo 'greenhouse/sensor/'\n");
 
     await mqttHelper.SubscribeAsync(
-        topic: "greenhouse/test/#",
+        topic: "greenhouse/sensor/#",
         qos: MqttQualityOfServiceLevel.AtLeastOnce
     );
 
