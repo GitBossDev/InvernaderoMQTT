@@ -8,11 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MQTTnet" Version="5.1.0.1559" />
+    <ProjectReference Include="..\Greenhouse.Shared\Greenhouse.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Greenhouse.Shared\Greenhouse.Shared.csproj" />
+    <PackageReference Include="MQTTnet" Version="4.3.7" />
   </ItemGroup>
 
 </Project>
