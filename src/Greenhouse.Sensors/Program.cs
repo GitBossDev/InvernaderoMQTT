@@ -2,7 +2,6 @@
 using Greenhouse.Shared.Helpers;
 using MQTTnet.Protocol;
 using System.Text.Json;
-
 /*
  * GREENHOUSE SENSORS - PUBLISHER (FASE 1)
  * 
@@ -15,6 +14,7 @@ using System.Text.Json;
  * - Payload: El contenido del mensaje (texto, JSON, binario, etc.)
  * - QoS: Calidad de Servicio - define la garantía de entrega del mensaje
  */
+
 
 Console.WriteLine("==============================================");
 Console.WriteLine("  GREENHOUSE MQTT - PUBLISHER (Fase 1)");
@@ -65,14 +65,13 @@ try
     int C02ppm = randomNumber.Next(300, 1500);
 
     //Generamos variable con los datos del sensor
-    var dataC02 = new
-
+    SensorData dataC02 = new SensorData()
     {
-        sensorID = "CO2-1",
-        sensorType = "CO2",
-        value = C02ppm,
-        unit = "ppm",
-        timestamp = DateTime.UtcNow.ToString("o")
+        SensorID = "CO2-1",
+        SensorType = "CO2",
+        Value = C02ppm,
+        Unit = "ppm",
+        Timestamp = DateTime.UtcNow.ToString("o")
 
     };
 
@@ -97,13 +96,13 @@ try
     int LightPercentage = randomNumber.Next(0, 100);
 
     //Generamos variable con los datos del sensor
-    var dataLight = new
+    var dataLight = new SensorData
     {
-        sensorID = "Light-1",
-        sensorType = "Light",
-        value = LightPercentage,
-        unit = "%",
-        timestamp = DateTime.Now
+        SensorID = "Light-1",
+        SensorType = "Light",
+        Value = LightPercentage,
+        Unit = "%",
+        Timestamp = DateTime.UtcNow.ToString("o")
     };
 
     // Convertimos el objeto a JSON
