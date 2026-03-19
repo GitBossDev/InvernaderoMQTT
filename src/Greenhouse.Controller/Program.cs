@@ -41,7 +41,7 @@ try
 {
     Console.WriteLine("Conectando al broker MQTT...");
     var client = await mqttHelper.ConnectAsync();
-    
+
     if (!mqttHelper.IsConnected)
     {
         Console.WriteLine("\n[ERROR] No se pudo conectar al broker.");
@@ -80,7 +80,7 @@ try
         topic: "greenhouse/test/qos0",
         qos: MqttQualityOfServiceLevel.AtMostOnce
     );
-
+    //hola
     // Suscripción 2: QoS 1
     await mqttHelper.SubscribeAsync(
         topic: "greenhouse/test/qos1",
@@ -110,7 +110,7 @@ try
     // Esto es muy útil para debugging o monitoreo general
     Console.WriteLine("\n--- Suscripción con Wildcard ---");
     Console.WriteLine("Wildcard '#' captura todos los topics bajo 'greenhouse/test/'\n");
-    
+
     await mqttHelper.SubscribeAsync(
         topic: "greenhouse/test/#",
         qos: MqttQualityOfServiceLevel.AtLeastOnce
