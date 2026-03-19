@@ -79,7 +79,7 @@ try
     string payloadJsonCO2 = JsonSerializer.Serialize(dataC02);
 
     await mqttHelper.PublishAsync(
-        topic: "greenhouse/sensors/co2/co2-01",
+        topic: "greenhouse/sensor/co2",
         payload: payloadJsonCO2,
         qos: MqttQualityOfServiceLevel.AtMostOnce
     );
@@ -109,7 +109,7 @@ try
     string payloadJsonLuz = JsonSerializer.Serialize(dataLight);
 
     await mqttHelper.PublishAsync(
-        topic: "greenhouse/sensors/light/light-01",
+        topic: "greenhouse/sensor/light",
         payload: payloadJsonLuz,
         qos: MqttQualityOfServiceLevel.AtLeastOnce
     );
