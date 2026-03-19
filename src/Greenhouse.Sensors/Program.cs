@@ -1,35 +1,43 @@
 ﻿using Greenhouse.Shared.Configuration;
 using Greenhouse.Shared.Helpers;
+using Greenhouse.Sensors.Simulators;
 using MQTTnet.Protocol;
 
 /*
- * GREENHOUSE SENSORS - PUBLISHER (FASE 1)
+ * GREENHOUSE SENSORS - SIMULADORES (FASE 2)
  * 
- * Este programa actúa como PUBLISHER (Publicador) en MQTT
- * Su trabajo es ENVIAR mensajes al broker en topics específicos
+ * Este programa simula sensores del invernadero publicando datos a MQTT
  * 
- * CONCEPTOS CLAVE:
- * - Publisher: Cliente que PUBLICA/ENVÍA mensajes
- * - Topic: "Dirección" o "canal" donde se publ ica el mensaje (ej: "test/hello")
- * - Payload: El contenido del mensaje (texto, JSON, binario, etc.)
- * - QoS: Calidad de Servicio - define la garantía de entrega del mensaje
+ * SENSORES IMPLEMENTADOS:
+ * - Temperatura: Sensor antiguo que envía texto plano, varía ±1°C cada 30s
+ * - Humedad: Sensor moderno que envía JSON, disminuye 2% cada 60s
+ * 
+ * Cada sensor publica en su propio topic:
+ * - greenhouse/sensors/temperature/temp-01
+ * - greenhouse/sensors/humidity/humidity-01
  */
 
 Console.WriteLine("==============================================");
-Console.WriteLine("  GREENHOUSE MQTT - PUBLISHER (Fase 1)");
+Console.WriteLine("  GREENHOUSE MQTT - SENSORES (Fase 2)");
 Console.WriteLine("==============================================\n");
 
 // Configurar parámetros de conexión MQTT
 var settings = new MqttSettings
 {
-    BrokerHost = "localhost",  // Mosquitto está corriendo en Docker en nuestra máquina
-    BrokerPort = 1883,          // Puerto estándar MQTT
-    ClientId = "greenhouse-publisher-01"  // ID único para este cliente
+    BrokerHost = "localhost",
+    BrokerPort = 1883,
+    ClientId = "greenhouse-sensors-publisher"
 };
 
 Console.WriteLine($"Configuración:");
 Console.WriteLine($"  Broker: {settings.BrokerHost}:{settings.BrokerPort}");
 Console.WriteLine($"  Client ID: {settings.ClientId}\n");
+
+// Crear instancias de los sensores
+var temperatureSensor = new TemperatureSensor("temp-01");
+var humiditySensor = new HumiditySensor("humidity-01");
+
+Console.WriteLine();
 
 // Crear helper MQTT y conectar al broker
 var mqttHelper = new MqttClientHelper(settings);
@@ -38,7 +46,7 @@ try
 {
     Console.WriteLine("Conectando al broker MQTT...");
     await mqttHelper.ConnectAsync();
-    
+
     if (!mqttHelper.IsConnected)
     {
         Console.WriteLine("\n[ERROR] No se pudo conectar al broker.");
@@ -48,97 +56,62 @@ try
     }
 
     Console.WriteLine("\n==============================================");
-    Console.WriteLine("  FASE 1: PRUEBAS DE QoS");
-    Console.WriteLine("==============================================\n");
-
-    // PRUEBA 1: QoS 0 - At Most Once (Máximo una vez)
-    // El mensaje se envía sin confirmación, puede perderse
-    // Es el más rápido pero menos confiable
-    // Útil para: datos no críticos, actualizaciones frecuentes (temperatura cada segundo)
-    Console.WriteLine("\n--- Prueba 1: QoS 0 (At Most Once) ---");
-    Console.WriteLine("Sin confirmación del broker, el mensaje puede perderse");
-    Console.WriteLine("Ideal para: datos no críticos que se actualizan frecuentemente\n");
-    
-    await mqttHelper.PublishAsync(
-        topic: "greenhouse/test/qos0",
-        payload: $"Mensaje QoS 0 - Timestamp: {DateTime.Now:HH:mm:ss.fff}",
-        qos: MqttQualityOfServiceLevel.AtMostOnce
-    );
-    
-    await Task.Delay(1000);  // Esperar 1 segundo entre pruebas
-
-    // PRUEBA 2: QoS 1 - At Least Once (Al menos una vez)
-    // El broker confirma que recibió el mensaje
-    // Puede haber duplicados si la confirmación se pierde
-    // Útil para: datos importantes que no deben perderse
-    Console.WriteLine("\n--- Prueba 2: QoS 1 (At Least Once) ---");
-    Console.WriteLine("El broker confirma recepción, puede haber duplicados");
-    Console.WriteLine("Ideal para: datos importantes que requieren confirmación\n");
-    
-    await mqttHelper.PublishAsync(
-        topic: "greenhouse/test/qos1",
-        payload: $"Mensaje QoS 1 - Timestamp: {DateTime.Now:HH:mm:ss.fff}",
-        qos: MqttQualityOfServiceLevel.AtLeastOnce
-    );
-    
-    await Task.Delay(1000);
-
-    // PRUEBA 3: QoS 2 - Exactly Once (Exactamente una vez)
-    // Handshake de 4 pasos garantiza que el mensaje llegue una sola vez
-    // Es el más lento pero más confiable
-    // Útil para: comandos críticos (abrir válvula, activar alarma)
-    Console.WriteLine("\n--- Prueba 3: QoS 2 (Exactly Once) ---");
-    Console.WriteLine("Handshake completo, garantiza entrega única");
-    Console.WriteLine("Ideal para: comandos críticos que no deben duplicarse\n");
-    
-    await mqttHelper.PublishAsync(
-        topic: "greenhouse/test/qos2",
-        payload: $"Mensaje QoS 2 - Timestamp: {DateTime.Now:HH:mm:ss.fff}",
-        qos: MqttQualityOfServiceLevel.ExactlyOnce
-    );
-    
-    await Task.Delay(1000);
-
-    // PRUEBA 4: Retained Message (Mensaje retenido)
-    // El broker guarda el último mensaje con retain=true
-    // Nuevos suscriptores reciben inmediatamente este mensaje al conectarse
-    // Útil para: estado actual de dispositivos, configuraciones
-    Console.WriteLine("\n--- Prueba 4: Retained Message ---");
-    Console.WriteLine("El broker guarda este mensaje");
-    Console.WriteLine("Nuevos suscriptores lo recibirán inmediatamente\n");
-    
-    await mqttHelper.PublishAsync(
-        topic: "greenhouse/test/status",
-        payload: "Publisher activo y funcionando",
-        qos: MqttQualityOfServiceLevel.AtLeastOnce,
-        retain: true  // Este mensaje se retiene en el broker
-    );
-
-    Console.WriteLine("\n==============================================");
-    Console.WriteLine("  PUBLICACIÓN CONTINUA");
+    Console.WriteLine("  PUBLICACIÓN ACTIVA DE SENSORES");
     Console.WriteLine("  Presiona Ctrl+C para detener");
     Console.WriteLine("==============================================\n");
 
-    // Publicar mensajes continuamente cada 3 segundos
-    // Esto simula un sensor enviando datos periódicamente
-    int messageCount = 0;
-    
+    // Variables para controlar los timers de cada sensor
+    var lastTempPublish = DateTime.MinValue;
+    var lastHumidityPublish = DateTime.MinValue;
+
+    // Loop principal de publicación
     while (true)
     {
-        messageCount++;
-        
-        var message = $"Mensaje #{messageCount} desde Publisher - {DateTime.Now:HH:mm:ss}";
-        
-        await mqttHelper.PublishAsync(
-            topic: "greenhouse/test/heartbeat",
-            payload: message,
-            qos: MqttQualityOfServiceLevel.AtLeastOnce
-        );
-        
-        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Publicado: {message}");
-        
-        // Esperar 3 segundos antes del siguiente mensaje
-        await Task.Delay(3000);
+        var now = DateTime.UtcNow;
+
+        // Publicar TEMPERATURA cada 30 segundos
+        if ((now - lastTempPublish).TotalMilliseconds >= temperatureSensor.PublishIntervalMs)
+        {
+            // Actualizar lectura del sensor
+            temperatureSensor.UpdateReading();
+
+            // Generar payload y publicar
+            var tempPayload = temperatureSensor.GeneratePayload();
+            var tempTopic = temperatureSensor.GetTopic();
+
+            await mqttHelper.PublishAsync(
+                topic: tempTopic,
+                payload: tempPayload,
+                qos: MqttQualityOfServiceLevel.AtLeastOnce
+            );
+
+            Console.WriteLine($"[PUBLICADO] {tempTopic} → {tempPayload}");
+            lastTempPublish = now;
+        }
+
+        // Publicar HUMEDAD cada 60 segundos
+        if ((now - lastHumidityPublish).TotalMilliseconds >= humiditySensor.PublishIntervalMs)
+        {
+            // Actualizar lectura del sensor
+            humiditySensor.UpdateReading();
+
+            // Generar payload y publicar
+            var humidityPayload = humiditySensor.GeneratePayload();
+            var humidityTopic = humiditySensor.GetTopic();
+
+            await mqttHelper.PublishAsync(
+                topic: humidityTopic,
+                payload: humidityPayload,
+                qos: MqttQualityOfServiceLevel.AtLeastOnce
+            );
+
+            Console.WriteLine($"[PUBLICADO] {humidityTopic} → {humidityPayload}");
+            lastHumidityPublish = now;
+        }
+
+        // Esperar 1 segundo antes de verificar nuevamente
+        // Esto evita consumir CPU innecesariamente
+        await Task.Delay(1000);
     }
 }
 catch (Exception ex)

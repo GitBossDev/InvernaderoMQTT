@@ -462,9 +462,9 @@ docker-compose build
 
 ## ESTADO ACTUAL
 
-**Fase completada:** FASE 0 - Setup del Entorno
-**Fase actual:** FASE 1 - Fundamentos MQTT
-**Próximo paso:** Configurar Mosquitto en Docker y crear primer cliente MQTT
+**Fase completada:** FASE 1 - Fundamentos MQTT
+**Fase actual:** FASE 2 - Simulador de Sensores (Temperatura y Humedad implementados)
+**Próximo paso:** Probar sensores en MQTT Explorer y consola, luego implementar CO2 y Luz
 
 ---
 

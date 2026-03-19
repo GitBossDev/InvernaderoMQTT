@@ -73,23 +73,56 @@ docker-compose up -d
 
 ## Ejecución
 
-### Ejecutar sensores
+### 1. Levantar broker MQTT
 
 ```bash
-dotnet run --project src/Greenhouse.Sensors
+docker-compose up -d
 ```
 
-### Ejecutar controlador
+### 2. Ejecutar Controller (Terminal 1)
 
 ```bash
 dotnet run --project src/Greenhouse.Controller
 ```
 
+El controller se suscribirá a los topics de sensores y procesará los mensajes:
+- Sensores antiguos (texto plano) → Convierte a JSON
+- Sensores modernos (JSON) → Procesa directamente
+
+### 3. Ejecutar Sensores (Terminal 2)
+
+```bash
+dotnet run --project src/Greenhouse.Sensors
+```
+
+Los sensores publicarán datos periódicamente:
+- **Temperatura**: Cada 30 segundos (±1°C por lectura)
+- **Humedad**: Cada 60 segundos (-2% por lectura)
+
+### 4. Monitorear con MQTT Explorer (Opcional)
+
+1. Descargar MQTT Explorer: https://mqtt-explorer.com/
+2. Conectar a `localhost:1883`
+3. Observar topics en tiempo real bajo `greenhouse/sensors/`
+
+### 5. Monitorear desde CLI (Opcional)
+
+```bash
+# Ver todos los sensores
+docker exec -it greenhouse-mosquitto mosquitto_sub -h localhost -t "greenhouse/sensors/#" -v
+
+# Ver solo temperatura
+docker exec -it greenhouse-mosquitto mosquitto_sub -h localhost -t "greenhouse/sensors/temperature/#" -v
+
+# Ver solo humedad
+docker exec -it greenhouse-mosquitto mosquitto_sub -h localhost -t "greenhouse/sensors/humidity/#" -v
+```
+
 ## Fases del Proyecto
 
 - **Fase 0**: Setup del Entorno - COMPLETADA
-- **Fase 1**: Fundamentos MQTT - En desarrollo
-- **Fase 2**: Simulador de Sensores
+- **Fase 1**: Fundamentos MQTT - COMPLETADA
+- **Fase 2**: Simulador de Sensores - EN PROGRESO (Temperatura y Humedad implementados)
 - **Fase 3**: Servidor de Control
 - **Fase 4**: Actuadores y Feedback Loop
 - **Fase 5**: Dashboard Visual
