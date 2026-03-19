@@ -77,12 +77,12 @@ try
 
     // Suscripción: CO2
     await mqttHelper.SubscribeAsync(
-        topic: "greenhouse/sensor/co2",
+        topic: "greenhouse/sensors/co2/co2-01",
         qos: MqttQualityOfServiceLevel.AtMostOnce
     );
     // Suscripción: Luz
     await mqttHelper.SubscribeAsync(
-        topic: "greenhouse/sensor/light",
+        topic: "greenhouse/sensors/light/light-01",
         qos: MqttQualityOfServiceLevel.AtLeastOnce
     );
 
