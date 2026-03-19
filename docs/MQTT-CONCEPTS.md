@@ -110,7 +110,7 @@ greenhouse/
 
 **Buenas prácticas:**
 - Usar minúsculas consistentemente
-- Ser descriptivo pero conc iso
+- Ser descriptivo pero conciso
 - Máximo 3-5 niveles de profundidad
 - Ejemplos:
   - `company/location/device/sensor/reading`
