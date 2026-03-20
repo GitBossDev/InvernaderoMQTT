@@ -74,6 +74,15 @@ try
                 // SENSOR MODERNO: JSON, procesamiento directo
                 ProcessHumiditySensor(topic, payloadRaw, qos, timestamp);
             }
+            else if (topic.Contains("/light/"))
+            {
+                ProcessLightSensor(topic, payloadRaw, qos, timestamp);
+            }
+            else if (topic.Contains("/co2/"))
+            {
+                // SENSOR MODERNO: JSON, procesamiento directo
+                ProcessCO2Sensor(topic, payloadRaw, qos, timestamp);
+            }
             else
             {
                 // Otro tipo de mensaje
@@ -240,6 +249,76 @@ static void ProcessHumiditySensor(string topic, string payloadRaw, MqttQualityOf
     catch (JsonException ex)
     {
         Console.WriteLine($"[ERROR] Error al parsear JSON de humedad: {ex.Message}");
+        Console.WriteLine($"Payload recibido: {payloadRaw}");
+    }
+}
+static void ProcessCO2Sensor(string topic, string payloadRaw, MqttQualityOfServiceLevel qos, DateTime timestamp)
+{
+    try
+    {
+        // El payload ya viene en JSON, deserializar directamente
+        var reading = JsonSerializer.Deserialize<SensorReading>(payloadRaw);
+        var jsonReading = JsonSerializer.Serialize(reading, new JsonSerializerOptions { WriteIndented = true });
+
+        if (reading == null)
+        {
+            Console.WriteLine($"[ERROR] No se pudo deserializar JSON de humedad: {payloadRaw}");
+            return;
+        }
+        // Mostrar información procesada
+        Console.WriteLine($"\n┌── CO2 PROCESADO ──────────────────────────");
+        Console.WriteLine($"│ Timestamp:  {timestamp:HH:mm:ss}");
+        Console.WriteLine($"│ Topic:      {topic}");
+        Console.WriteLine($"│ QoS:        {qos}");
+        Console.WriteLine($"│ Sensor ID:  {reading.SensorId}");
+        Console.WriteLine($"│ Tipo:       {reading.SensorType}");
+        Console.WriteLine($"│ Nivel de CO2:    {reading.Value:F1}ppm");
+        Console.WriteLine($"│ Unidad:     {reading.Unit}");
+        Console.WriteLine($"│ Timestamp Sensor: {reading.Timestamp:HH:mm:ss}");
+        foreach (var line in jsonReading.Split('\n'))
+        {
+            Console.WriteLine($"│   {line}");
+        }
+        Console.WriteLine($"└───────────────────────────────────────────────\n");
+    }
+    catch (JsonException ex)
+    {
+        Console.WriteLine($"[ERROR] Error al parsear JSON de CO2: {ex.Message}");
+        Console.WriteLine($"Payload recibido: {payloadRaw}");
+    }
+}
+static void ProcessLightSensor(string topic, string payloadRaw, MqttQualityOfServiceLevel qos, DateTime timestamp)
+{
+    try
+    {
+        // El payload ya viene en JSON, deserializar directamente
+        var reading = JsonSerializer.Deserialize<SensorReading>(payloadRaw);
+        var jsonReading = JsonSerializer.Serialize(reading, new JsonSerializerOptions { WriteIndented = true });
+
+        if (reading == null)
+        {
+            Console.WriteLine($"[ERROR] No se pudo deserializar JSON de humedad: {payloadRaw}");
+            return;
+        }
+        // Mostrar información procesada
+        Console.WriteLine($"\n┌── LUZ PROCESADO ──────────────────────────");
+        Console.WriteLine($"│ Timestamp:  {timestamp:HH:mm:ss}");
+        Console.WriteLine($"│ Topic:      {topic}");
+        Console.WriteLine($"│ QoS:        {qos}");
+        Console.WriteLine($"│ Sensor ID:  {reading.SensorId}");
+        Console.WriteLine($"│ Tipo:       {reading.SensorType}");
+        Console.WriteLine($"│ Nivel de Luz:    {reading.Value:F1}%");
+        Console.WriteLine($"│ Unidad:     {reading.Unit}");
+        Console.WriteLine($"│ Timestamp Sensor: {reading.Timestamp:HH:mm:ss}");
+        foreach (var line in jsonReading.Split('\n'))
+        {
+            Console.WriteLine($"│   {line}");
+        }
+        Console.WriteLine($"└───────────────────────────────────────────────\n");
+    }
+    catch (JsonException ex)
+    {
+        Console.WriteLine($"[ERROR] Error al parsear JSON de luz: {ex.Message}");
         Console.WriteLine($"Payload recibido: {payloadRaw}");
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Greenhouse.Shared.Configuration;
 using Greenhouse.Shared.Helpers;
 using Greenhouse.Sensors.Simulators;
+using Greenhouse.Shared.Models;
 using MQTTnet.Protocol;
 using System.Text.Json;
 
@@ -68,66 +69,66 @@ try
     // Loop principal de publicación
     while (true)
     {
-            // Útil para: datos no críticos, actualizaciones frecuentes (temperatura cada segundo)
-    Console.WriteLine("\n--- CO2 ---");
-    Console.WriteLine("Sin confirmación del broker, el mensaje puede perderse");
+        // Útil para: datos no críticos, actualizaciones frecuentes (temperatura cada segundo)
+        Console.WriteLine("\n--- CO2 ---");
+        Console.WriteLine("Sin confirmación del broker, el mensaje puede perderse");
 
-    Random randomNumber = new Random();
+        Random randomNumber = new Random();
 
-    // Generar un número aleatorio decimal entre 300 y 1500 (lo ideal 400-800)
-    int C02ppm = randomNumber.Next(300, 1500);
+        // Generar un número aleatorio decimal entre 300 y 1500 (lo ideal 400-800)
+        int C02ppm = randomNumber.Next(300, 1500);
 
-    //Generamos variable con los datos del sensor
-    SensorData dataC02 = new SensorData()
-    {
-        sensorID = "CO2-1",
-        sensorType = "CO2",
-        value = C02ppm,
-        unit = "ppm",
-        timestamp = DateTime.UtcNow.ToString("o")
+        //Generamos variable con los datos del sensor
+        SensorReading dataC02 = new SensorReading()
+        {
+            SensorId = "CO2-1",
+            SensorType = "CO2",
+            Value = C02ppm,
+            Unit = "ppm",
+            Timestamp = DateTime.UtcNow
 
-    };
+        };
 
-    // Convertimos el objeto a JSON
-    string payloadJsonCO2 = JsonSerializer.Serialize(dataC02);
+        // Convertimos el objeto a JSON
+        string payloadJsonCO2 = JsonSerializer.Serialize(dataC02);
 
-    await mqttHelper.PublishAsync(
-        topic: "greenhouse/sensors/co2/co2-01",
-        payload: payloadJsonCO2,
-        qos: MqttQualityOfServiceLevel.AtMostOnce
-    );
+        await mqttHelper.PublishAsync(
+            topic: "greenhouse/sensors/co2/co2-01",
+            payload: payloadJsonCO2,
+            qos: MqttQualityOfServiceLevel.AtMostOnce
+        );
 
-    await Task.Delay(5000);  // Esperar 1 segundo entre pruebas
+        await Task.Delay(5000);  // Esperar 1 segundo entre pruebas
 
-    // LUZ
-    // El broker confirma que recibió el mensaje
-    // Puede haber duplicados si la confirmación se pierde
-    // Útil para: datos importantes que no deben perderse
-    Console.WriteLine("\n--- LIGHT ---");
-    Console.WriteLine("El broker confirma recepción, puede haber duplicados");
+        // LUZ
+        // El broker confirma que recibió el mensaje
+        // Puede haber duplicados si la confirmación se pierde
+        // Útil para: datos importantes que no deben perderse
+        Console.WriteLine("\n--- LIGHT ---");
+        Console.WriteLine("El broker confirma recepción, puede haber duplicados");
 
-    int LightPercentage = randomNumber.Next(0, 100);
+        int LightPercentage = randomNumber.Next(0, 100);
 
-    //Generamos variable con los datos del sensor
-    var dataLight = new SensorData
-    {
-        sensorID = "Light-1",
-        sensorType = "Light",
-        value = LightPercentage,
-        unit = "%",
-        timestamp = DateTime.UtcNow.ToString("o")
-    };
+        //Generamos variable con los datos del sensor
+        SensorReading dataLight = new SensorReading()
+        {
+            SensorId = "Light-1",
+            SensorType = "Light",
+            Value = LightPercentage,
+            Unit = "%",
+            Timestamp = DateTime.UtcNow
+        };
 
-    // Convertimos el objeto a JSON
-    string payloadJsonLuz = JsonSerializer.Serialize(dataLight);
+        // Convertimos el objeto a JSON
+        string payloadJsonLuz = JsonSerializer.Serialize(dataLight);
 
-    await mqttHelper.PublishAsync(
-        topic: "greenhouse/sensors/light/light-01",
-        payload: payloadJsonLuz,
-        qos: MqttQualityOfServiceLevel.AtLeastOnce
-    );
+        await mqttHelper.PublishAsync(
+            topic: "greenhouse/sensors/light/light-01",
+            payload: payloadJsonLuz,
+            qos: MqttQualityOfServiceLevel.AtLeastOnce
+        );
 
-    await Task.Delay(5000);
+        await Task.Delay(5000);
 
         var now = DateTime.UtcNow;
 
